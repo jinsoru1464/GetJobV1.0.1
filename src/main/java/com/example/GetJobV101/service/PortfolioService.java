@@ -46,7 +46,7 @@ public class PortfolioService {
         // ✅ 이미지 경로 저장
         List<String> imagePaths = dto.getImagePaths();
         if (imagePaths == null || imagePaths.isEmpty()) {
-            imagePaths = List.of("no-image.jpg");
+            imagePaths = List.of("https://get-job-bucket.s3.ap-northeast-2.amazonaws.com/defaults/blue.png");
         }
         portfolio.setImagePaths(imagePaths);
 
@@ -154,7 +154,7 @@ public class PortfolioService {
             // 이미지 경로 업데이트
             List<String> imagePaths = dto.getImagePaths();
             if (imagePaths == null || imagePaths.isEmpty()) {
-                imagePaths = List.of("no-image.jpg");
+                imagePaths = List.of("https://get-job-bucket.s3.ap-northeast-2.amazonaws.com/defaults/blue.png");
             }
             existingPortfolio.setImagePaths(imagePaths);
 
