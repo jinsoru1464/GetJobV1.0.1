@@ -19,14 +19,20 @@ import java.util.List;
 @Entity
 public class Portfolio {
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
+
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String title;
+    private String subject;
     private LocalDate startDate;
     private LocalDate endDate;
-    private int teamSize;
+    private String teamSize;
     private String skills;
     private String role;
 
@@ -38,7 +44,5 @@ public class Portfolio {
     @CollectionTable(name = "portfolio_images", joinColumns = @JoinColumn(name = "portfolio_id"))
     private List<String> imagePaths = new ArrayList<>();    // 🔥 반드시 초기화 필수
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
+
 }

@@ -32,6 +32,7 @@ public class PortfolioService {
     public Portfolio savePortfolio(PortfolioDto dto) {
         Portfolio portfolio = new Portfolio();
         portfolio.setTitle(dto.getTitle());
+        portfolio.setSubject(dto.getSubject());
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         portfolio.setStartDate(LocalDate.parse(dto.getStartDate(), formatter));
@@ -43,7 +44,11 @@ public class PortfolioService {
         portfolio.setDescriptions(dto.getDescriptions());
 
         // ✅ 이미지 경로 저장
-        portfolio.setImagePaths(dto.getImagePaths());
+        List<String> imagePaths = dto.getImagePaths();
+        if (imagePaths == null || imagePaths.isEmpty()) {
+            imagePaths = List.of("no-image.jpg");
+        }
+        portfolio.setImagePaths(imagePaths);
 
         return portfolioRepository.save(portfolio);
     }
@@ -68,7 +73,11 @@ public class PortfolioService {
     }
 
 
-    // presigned url 생성 (put 메소드로)
+
+
+
+
+    //presigned url 생성 (put 메소드로)
     private GeneratePresignedUrlRequest getGeneratePresignedUrlRequest(String bucket, String fileName) {
         GeneratePresignedUrlRequest generatePresignedUrlRequest = new GeneratePresignedUrlRequest(bucket, fileName)
                 .withMethod(HttpMethod.PUT)
@@ -129,6 +138,7 @@ public class PortfolioService {
 
             // 제목, 날짜, 인원, 스킬, 역할 등 업데이트
             existingPortfolio.setTitle(dto.getTitle());
+            existingPortfolio.setSubject(dto.getSubject());
 
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
             existingPortfolio.setStartDate(LocalDate.parse(dto.getStartDate(), formatter));
@@ -142,7 +152,11 @@ public class PortfolioService {
             existingPortfolio.setDescriptions(dto.getDescriptions());
 
             // 이미지 경로 업데이트
-            existingPortfolio.setImagePaths(dto.getImagePaths());
+            List<String> imagePaths = dto.getImagePaths();
+            if (imagePaths == null || imagePaths.isEmpty()) {
+                imagePaths = List.of("no-image.jpg");
+            }
+            existingPortfolio.setImagePaths(imagePaths);
 
             // 수정된 포트폴리오 저장
             return portfolioRepository.save(existingPortfolio);
