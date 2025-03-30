@@ -7,6 +7,7 @@ import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import com.example.GetJobV101.dto.PortfolioDto;
 import com.example.GetJobV101.entity.Portfolio;
+import com.example.GetJobV101.entity.User;
 import com.example.GetJobV101.repository.PortfolioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,6 +29,9 @@ public class PortfolioService {
 
     private final AmazonS3 amazonS3;
 
+
+
+
     // ✅ 포트폴리오 저장 메소드
     public Portfolio savePortfolio(PortfolioDto dto) {
         Portfolio portfolio = new Portfolio();
@@ -46,10 +50,11 @@ public class PortfolioService {
         // ✅ 이미지 경로 저장
         List<String> imagePaths = dto.getImagePaths();
         if (imagePaths == null || imagePaths.isEmpty()) {
-            imagePaths = List.of("https://get-job-bucket.s3.ap-northeast-2.amazonaws.com/defaults/blue.png");
+            imagePaths = List.of("no-image.jpg");
         }
         portfolio.setImagePaths(imagePaths);
 
+        portfolio.setUser(dto.getUser());
         return portfolioRepository.save(portfolio);
     }
 
@@ -116,6 +121,10 @@ public class PortfolioService {
         return portfolioRepository.findAll();
     }
 
+    public List<Portfolio> getPortfoliosByUser(User user) {
+        return portfolioRepository.findAllByUser(user);
+    }
+
     // ✅ 단일 포트폴리오 조회 메소드
     public Optional<Portfolio> getPortfolioById(Long id) {
         return portfolioRepository.findById(id);
@@ -154,9 +163,13 @@ public class PortfolioService {
             // 이미지 경로 업데이트
             List<String> imagePaths = dto.getImagePaths();
             if (imagePaths == null || imagePaths.isEmpty()) {
-                imagePaths = List.of("https://get-job-bucket.s3.ap-northeast-2.amazonaws.com/defaults/blue.png");
+                imagePaths = List.of("no-image.jpg");
             }
             existingPortfolio.setImagePaths(imagePaths);
+
+            if (dto.getUser() != null) {
+                existingPortfolio.setUser(dto.getUser());
+            }
 
             // 수정된 포트폴리오 저장
             return portfolioRepository.save(existingPortfolio);
