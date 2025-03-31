@@ -32,7 +32,7 @@ import java.util.*;
 @RequestMapping("/api/portfolios")
 public class PortfolioController {
 
-    @Value("${spring.file.upload-dir}")
+    @Value("${spring.file.upload-dir:/home/ubuntu/uploads}")
     private String uploadDir;
 
     @Autowired

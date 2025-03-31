@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
 
+
 @Configuration
 public class OpenApiConfig {
 
@@ -26,6 +27,7 @@ public class OpenApiConfig {
                 .type(SecurityScheme.Type.HTTP)       // HTTP 인증 방식
                 .scheme("bearer")                     // Bearer 방식 사용
                 .bearerFormat("JWT");                 // 형식은 JWT
+
 
         // 🔐 이 인증 스키마를 모든 API에 기본 적용
         SecurityRequirement securityRequirement = new SecurityRequirement()
