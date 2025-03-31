@@ -315,7 +315,7 @@ public class PortfolioController {
     @PostMapping("/preSignedUrl")
     public ResponseEntity<Map<String, String>> getPresignedUrl(@Valid @RequestBody PresignedUrlRequest request) {
         Map<String, String> preSignedUrl = portfolioService.getPresignedUrl("image", request.getImageName());
-        return ResponseEntity.ok(preSignedUrl);
+        return ResponseEntity.ok(preSignedUrl)  ;
     }
 
 }
