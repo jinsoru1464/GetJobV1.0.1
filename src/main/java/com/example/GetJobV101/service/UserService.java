@@ -4,6 +4,7 @@ import com.example.GetJobV101.dto.JoinRequest;
 import com.example.GetJobV101.dto.LoginRequest;
 import com.example.GetJobV101.dto.LoginResponse;
 import com.example.GetJobV101.entity.User;
+import com.example.GetJobV101.jwt.JwtTokenProvider;
 import com.example.GetJobV101.jwt.JwtUtil;
 import com.example.GetJobV101.repository.UserRepository;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -15,14 +16,14 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil; // ✅ 추가
+    private final JwtTokenProvider jwtTokenProvider; // JwtTokenProvider만 사용
 
     public UserService(UserRepository userRepository,
                        BCryptPasswordEncoder passwordEncoder,
-                       JwtUtil jwtUtil) { // ✅ 생성자 주입
+                       JwtTokenProvider jwtTokenProvider) { // 생성자 주입
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
-        this.jwtUtil = jwtUtil;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
     public String signup(JoinRequest request) {
@@ -51,7 +52,7 @@ public class UserService {
             throw new RuntimeException("비밀번호가 일치하지 않습니다.");
         }
 
-        String token = jwtUtil.createToken(user.getLoginId());
+        String token = jwtTokenProvider.generateToken(user.getLoginId(), "ROLE_USER"); // 기존 JWT 생성
         return new LoginResponse(token);
     }
 
@@ -64,5 +65,10 @@ public class UserService {
         return userRepository.existsByLoginId(email);
     }
 
+    // 임시 토큰 생성 메서드
+    public String generateTemporaryToken() {
+        return jwtTokenProvider.generateTemporaryToken(); // 임시 토큰 생성
+    }
 }
+
 

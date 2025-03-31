@@ -95,17 +95,10 @@ public class AuthController {
                     )
             }
     )
-    @PostMapping("/mock-login")
-    public ResponseEntity<?> mockLogin() {
-        // 임시 유저명과 역할 설정
-        String username = "temporary";
-        String role = "USER"; // 역할을 필요에 따라 다르게 설정 가능
-
-        // JWT 토큰 생성
-        String token = jwtTokenProvider.generateToken(username, role);
-
-        // 응답 객체로 반환
-        return ResponseEntity.ok(new JwtResponse(token));
+    @GetMapping("/temporary-token")
+    public ResponseEntity<String> generateTemporaryToken() {
+        String token = userService.generateTemporaryToken();
+        return ResponseEntity.ok(token);
     }
 
 
