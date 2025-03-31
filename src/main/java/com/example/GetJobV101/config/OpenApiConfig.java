@@ -14,6 +14,7 @@ public class OpenApiConfig {
     public OpenAPI customOpenAPI() {
         Server server = new Server();
         server.setUrl("https://getjob.world"); // ✅ HTTPS로 설정
+        server.setDescription("Production Server");
 
         return new OpenAPI().servers(List.of(server));
     }
