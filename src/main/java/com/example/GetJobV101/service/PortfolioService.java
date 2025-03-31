@@ -18,6 +18,9 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+import org.springframework.lang.Nullable; // 또는 javax.annotation.Nullable
+
+//서버 열면{
 @Service
 @RequiredArgsConstructor
 public class PortfolioService {
@@ -28,9 +31,30 @@ public class PortfolioService {
     private String bucket;
 
     private final AmazonS3 amazonS3;
+    //}
 
+//로컬 열면{
+/*@Service
+public class PortfolioService {
 
+    private final PortfolioRepository portfolioRepository;
+    private final AmazonS3 amazonS3;
 
+    @Value("${spring.cloud.aws.s3.bucket:}")
+    private String bucket;
+
+    public PortfolioService(
+            PortfolioRepository portfolioRepository,
+            @Nullable AmazonS3 amazonS3 // 🚩 null 허용
+    ) {
+        this.portfolioRepository = portfolioRepository;
+        this.amazonS3 = amazonS3;
+    }
+
+    public boolean isS3Enabled() {
+        return amazonS3 != null;
+    }*/
+//}
 
     // ✅ 포트폴리오 저장 메소드
     public Portfolio savePortfolio(PortfolioDto dto) {
@@ -50,7 +74,7 @@ public class PortfolioService {
         // ✅ 이미지 경로 저장
         List<String> imagePaths = dto.getImagePaths();
         if (imagePaths == null || imagePaths.isEmpty()) {
-            imagePaths = List.of("no-image.jpg");
+            imagePaths = List.of("https://get-job-bucket.s3.ap-northeast-2.amazonaws.com/defaults/default.png");
         }
         portfolio.setImagePaths(imagePaths);
 
@@ -163,7 +187,7 @@ public class PortfolioService {
             // 이미지 경로 업데이트
             List<String> imagePaths = dto.getImagePaths();
             if (imagePaths == null || imagePaths.isEmpty()) {
-                imagePaths = List.of("no-image.jpg");
+                imagePaths = List.of("https://get-job-bucket.s3.ap-northeast-2.amazonaws.com/defaults/default.png");
             }
             existingPortfolio.setImagePaths(imagePaths);
 

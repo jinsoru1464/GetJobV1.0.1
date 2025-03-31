@@ -27,44 +27,41 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .cors() // 🔥 CORS 활성화
-                .and()
-                .csrf().disable()
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-
-                .and()
-                .authorizeHttpRequests()
-                .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/portfolios/**").authenticated()
-                .requestMatchers(HttpMethod.POST, "/api/portfolios/**").authenticated()
-                .requestMatchers(HttpMethod.PUT, "/api/portfolios/**").authenticated()
-                .requestMatchers(HttpMethod.DELETE, "/api/portfolios/**").authenticated()
-
-                .requestMatchers("/api-docs/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                .requestMatchers("/mainpage2.html").permitAll()
-                .requestMatchers("/inputpage.html").permitAll()
-                .requestMatchers("/portfoliodetail.html").permitAll()
-                .requestMatchers("/portfoliopage.html").permitAll()
-                .anyRequest().denyAll()
-
-                .and()
+                .cors(cors -> cors
+                        .configurationSource(corsConfigurationSource())
+                )
+                .csrf(csrf -> csrf.disable())
+                .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/h2-console/**").permitAll()
+                        .requestMatchers("/api-docs/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/mainpage2.html", "/inputpage.html", "/portfoliodetail.html", "/portfoliopage.html").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/portfolios/**").hasAnyRole("USER", "TEMP_USER")
+                        .requestMatchers(HttpMethod.POST, "/api/portfolios/**").hasAnyRole("USER", "TEMP_USER")
+                        .requestMatchers(HttpMethod.PUT, "/api/portfolios/**").hasAnyRole("USER", "TEMP_USER")
+                        .requestMatchers(HttpMethod.DELETE, "/api/portfolios/**").hasAnyRole("USER", "TEMP_USER")
+                        .anyRequest().denyAll()
+                )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-    // 🔥 CORS 설정 등록
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of(
-                "http://localhost:8080", // 개발용
-                "https://getjob.world"  // 배포용 (https로 쓰는 게 좋아)
+                "http://localhost:8080",
+                "https://getjob.world"
         ));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
-        config.setAllowCredentials(true); // 인증정보 허용
-        config.setMaxAge(3600L); // preflight 캐시
+        config.setAllowCredentials(true);
+        config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);

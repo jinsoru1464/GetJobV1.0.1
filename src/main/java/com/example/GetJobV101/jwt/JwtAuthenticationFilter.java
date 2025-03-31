@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -37,17 +38,34 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = header.substring(7);
         String loginId = jwtUtil.getLoginIdFromToken(token);
 
-        if (loginId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userDetailsService.loadUserByUsername(loginId);
+        if (loginId == null || SecurityContextHolder.getContext().getAuthentication() != null) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
-            if (jwtUtil.validateToken(token, userDetails)) {
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+        // ✅ TEMP USER 처리
+        if (loginId.equals("temporary")) {
+            if (!jwtUtil.isTokenExpired(token)) {
+                UsernamePasswordAuthenticationToken tempAuth =
+                        new UsernamePasswordAuthenticationToken("temporary", null,
+                                List.of(() -> "ROLE_TEMP_USER")); // 람다로 권한 생성
+                SecurityContextHolder.getContext().setAuthentication(tempAuth);
             }
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // ✅ 일반 USER 처리
+        UserDetails userDetails = userDetailsService.loadUserByUsername(loginId);
+
+        if (jwtUtil.validateToken(token, userDetails)) {
+            UsernamePasswordAuthenticationToken authToken =
+                    new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(authToken);
         }
 
         filterChain.doFilter(request, response);
     }
+
 }

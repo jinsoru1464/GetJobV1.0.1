@@ -17,6 +17,8 @@ public class JwtUtil {
     private final Key key;
     private final long EXPIRATION_TIME = 1000 * 60 * 60 * 3; // 1시간
 
+    private final long TEMPORARY_EXPIRATION_TIME = 1000L * 60 * 60 * 24 * 7; // 7일
+
     public JwtUtil(@Value("${jwt.secret}") String secretKey) {
         this.key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey));
     }
@@ -26,6 +28,17 @@ public class JwtUtil {
                 .setSubject(loginId)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    // 임시 사용자용 토큰 생성
+    public String generateTemporaryToken() {
+        return Jwts.builder()
+                .setSubject("temporary")
+                .claim("role", "TEMP_USER")
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + TEMPORARY_EXPIRATION_TIME))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
