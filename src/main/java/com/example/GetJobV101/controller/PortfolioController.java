@@ -294,9 +294,7 @@ public class PortfolioController {
                 }
             }
 
-            if (uploadedFileNames.isEmpty()) {
-                uploadedFileNames.add("no-image.png");
-            }
+
 
             PortfolioDto dto = new PortfolioDto(title, subject, startDate, endDate, teamSize, skills, role, descriptions, uploadedFileNames);
             Portfolio updatedPortfolio = portfolioService.updatePortfolio(id, dto);
