@@ -23,6 +23,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final CustomUserDetailsService userDetailsService;
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        System.out.println("🚨 Filter check: " + path);
+
+        // Swagger UI와 인증 API 전부 JWT 필터 제외
+        if (path.startsWith("/api/auth")
+                || path.startsWith("/swagger-ui")
+                || path.startsWith("/v3/api-docs")
+                || path.startsWith("/api-docs")) {
+            System.out.println("✅ JWT 필터 제외: " + path);
+            return true;
+        }
+
+        return false;
+    }
+
+
+
+
+
+
+    @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain)

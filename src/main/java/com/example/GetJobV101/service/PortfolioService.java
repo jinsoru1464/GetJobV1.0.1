@@ -33,8 +33,8 @@ public class PortfolioService {
     private final AmazonS3 amazonS3;
     //}
 
-//로컬 열면{
-/*@Service
+/*//로컬 열면{
+@Service
 public class PortfolioService {
 
     private final PortfolioRepository portfolioRepository;
@@ -53,8 +53,8 @@ public class PortfolioService {
 
     public boolean isS3Enabled() {
         return amazonS3 != null;
-    }*/
-//}
+    }
+//}*/
 
     // ✅ 포트폴리오 저장 메소드
     public Portfolio savePortfolio(PortfolioDto dto) {

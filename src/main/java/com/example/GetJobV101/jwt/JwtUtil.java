@@ -22,22 +22,18 @@ public class JwtUtil {
         this.key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey));
     }
 
-    public String createToken(String loginId) {
-        return Jwts.builder()
-                .setSubject(loginId)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
-                .signWith(key, SignatureAlgorithm.HS256)
-                .compact();
-    }
+
+
 
     public String getLoginIdFromToken(String token) {
-        return Jwts.parser()
-                .setSigningKey(key)
+        return Jwts.parserBuilder()
+                .setSigningKey(key) // key는 JwtTokenProvider에서 사용하는 비밀 키와 동일해야 합니다.
+                .build()
                 .parseClaimsJws(token)
                 .getBody()
                 .getSubject();
     }
+
 
     public boolean validateToken(String token, org.springframework.security.core.userdetails.UserDetails userDetails) {
         final String loginId = getLoginIdFromToken(token);

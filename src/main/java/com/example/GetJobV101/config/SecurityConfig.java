@@ -27,24 +27,39 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .cors() // 🔥 CORS 활성화
+                .cors()
                 .and()
                 .csrf().disable()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-
                 .and()
                 .authorizeHttpRequests()
-                .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/portfolios/**").authenticated()
-                .requestMatchers(HttpMethod.POST, "/api/portfolios/**").authenticated()
-                .requestMatchers(HttpMethod.PUT, "/api/portfolios/**").authenticated()
-                .requestMatchers(HttpMethod.DELETE, "/api/portfolios/**").authenticated()
 
-                .requestMatchers("/api-docs/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                .requestMatchers("/mainpage2.html").permitAll()
-                .requestMatchers("/inputpage.html").permitAll()
-                .requestMatchers("/portfoliodetail.html").permitAll()
-                .requestMatchers("/portfoliopage.html").permitAll()
+                // ✅ Swagger, Docs 허용
+                .requestMatchers(
+                        "/swagger-ui.html",
+                        "/swagger-ui/**",
+                        "/v3/api-docs/**",
+                        "/api-docs/**"
+                ).permitAll()
+
+                // ✅ 인증 API 허용
+                .requestMatchers("/api/auth/**").permitAll()
+
+                // ✅ CORS preflight 허용
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                // ✅ 정적 페이지 허용
+                .requestMatchers(
+                        "/mainpage2.html",
+                        "/inputpage.html",
+                        "/portfoliodetail.html",
+                        "/portfoliopage.html"
+                ).permitAll()
+
+                // ✅ 포트폴리오는 인증 필요
+                .requestMatchers("/api/portfolios/**").authenticated()
+
+                // ❌ 그 외 차단
                 .anyRequest().denyAll()
 
                 .and()
@@ -53,18 +68,26 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // 🔥 CORS 설정 등록
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(
-                "http://localhost:8080", // 개발용
-                "https://getjob.world"  // 배포용 (https로 쓰는 게 좋아)
+
+        // 🔥 Swagger 테스트 위해 일단 전체 허용
+        config.setAllowedOriginPatterns(List.of(
+                "http://localhost:3000",
+                "https://getjob.world"
         ));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("*"));
-        config.setAllowCredentials(true); // 인증정보 허용
-        config.setMaxAge(3600L); // preflight 캐시
+        config.setAllowedHeaders(Arrays.asList(
+                "Authorization",
+                "Content-Type",
+                "Accept",
+                "Origin",
+                "X-Requested-With"
+        ));
+
+        config.setAllowCredentials(true); // "*" 와 함께 쓸 땐 false
+        config.setMaxAge(3600L); // preflight 캐시 시간
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);

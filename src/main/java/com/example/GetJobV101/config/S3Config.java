@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Primary;
 
 @Configuration
 //local 이면 밑에줄 키기
-/*@ConditionalOnProperty(name = "cloud.aws.enable", havingValue = "true")*/
+//@ConditionalOnProperty(name = "cloud.aws.enable", havingValue = "true")
 
 public class S3Config {
 

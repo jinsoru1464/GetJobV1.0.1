@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -96,10 +97,16 @@ public class AuthController {
             }
     )
     @GetMapping("/temporary-token")
-    public ResponseEntity<String> generateTemporaryToken() {
+    public ResponseEntity<Map<String, String>> generateTemporaryToken() {
+        System.out.println("💡 컨트롤러 도착: /api/auth/temporary-token");
         String token = userService.generateTemporaryToken();
-        return ResponseEntity.ok(token);
+
+        Map<String, String> response = new HashMap<>();
+        response.put("accessToken", token);
+
+        return ResponseEntity.ok(response);
     }
+
 
 
 }

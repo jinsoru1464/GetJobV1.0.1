@@ -7,6 +7,7 @@ import com.example.GetJobV101.entity.User;
 import com.example.GetJobV101.jwt.JwtTokenProvider;
 import com.example.GetJobV101.jwt.JwtUtil;
 import com.example.GetJobV101.repository.UserRepository;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -46,15 +47,21 @@ public class UserService {
 
     public LoginResponse login(LoginRequest request) {
         User user = userRepository.findByLoginId(request.getLoginId())
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다."));
+                .orElseThrow(() -> new UsernameNotFoundException("존재하지 않는 사용자입니다."));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("비밀번호가 일치하지 않습니다.");
+            throw new BadCredentialsException("비밀번호가 일치하지 않습니다.");
         }
 
-        String token = jwtTokenProvider.generateToken(user.getLoginId(), "ROLE_USER"); // 기존 JWT 생성
+        String role = "ROLE_USER"; // 기본적으로 ROLE_USER 부여
+        String token = jwtTokenProvider.generateToken(user.getLoginId(), role); // 기존 JWT 생성
         return new LoginResponse(token);
     }
+
+    public String generateTemporaryToken() {
+        return jwtTokenProvider.generateTemporaryToken(); // 임시 토큰 생성
+    }
+
 
     public User findByLoginId(String loginId) {
         return userRepository.findByLoginId(loginId)
@@ -65,10 +72,7 @@ public class UserService {
         return userRepository.existsByLoginId(email);
     }
 
-    // 임시 토큰 생성 메서드
-    public String generateTemporaryToken() {
-        return jwtTokenProvider.generateTemporaryToken(); // 임시 토큰 생성
-    }
+
 }
 
 
