@@ -74,6 +74,7 @@ public class SecurityConfig {
 
         // 🔥 Swagger 테스트 위해 일단 전체 허용
         config.setAllowedOriginPatterns(List.of(
+                "http://localhost:8080",
                 "http://localhost:3000",
                 "https://getjob.world"
         ));
