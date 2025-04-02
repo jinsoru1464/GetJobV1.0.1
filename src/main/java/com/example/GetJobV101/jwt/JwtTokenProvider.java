@@ -21,22 +21,7 @@ public class JwtTokenProvider {
         this.secretKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey)); // 비밀 키로 안전하게 처리
     }
 
-    // 임시 토큰 생성 메서드
-    public String generateTemporaryToken() {
-        String temporaryUserId = "temporary";  // 임시 유저 ID
-        String role = "ROLE_TEMPORARY";  // 임시 역할
 
-        Date now = new Date();
-        Date validity = new Date(now.getTime() + validityInMilliseconds); // 임시 토큰의 유효 시간
-
-        return Jwts.builder()
-                .setSubject(temporaryUserId)  // 임시 유저 ID 사용
-                .claim("role", role)  // 임시 역할 추가
-                .setIssuedAt(now)
-                .setExpiration(validity)
-                .signWith(secretKey, SignatureAlgorithm.HS256) // 생성된 비밀 키로 서명
-                .compact();
-    }
 
     public String generateToken(String username, String role) {
         Date now = new Date();

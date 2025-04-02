@@ -45,6 +45,8 @@ public class SecurityConfig {
                 // ✅ 인증 API 허용
                 .requestMatchers("/api/auth/**").permitAll()
 
+
+
                 // ✅ CORS preflight 허용
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
@@ -58,6 +60,9 @@ public class SecurityConfig {
 
                 // ✅ 포트폴리오는 인증 필요
                 .requestMatchers("/api/portfolios/**").authenticated()
+                .requestMatchers("/api/ai/**").authenticated()
+                // ✅ AI 교정 기능은 인증 없이 허용
+
 
                 // ❌ 그 외 차단
                 .anyRequest().denyAll()
@@ -75,7 +80,7 @@ public class SecurityConfig {
         // 🔥 Swagger 포함한 프론트 Origin 허용
         config.setAllowedOrigins(List.of(
                 "http://localhost:3000",
-                "http://localhost:8080",
+                //"http://localhost:8080",
                 "https://getjob.world"
         ));
 

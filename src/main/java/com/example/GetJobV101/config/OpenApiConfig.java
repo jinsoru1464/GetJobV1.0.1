@@ -39,7 +39,7 @@ public class OpenApiConfig {
                         .version("v1")
                         .description("GetJob 서비스 Swagger 문서"))
                 .servers(List.of(
-                        //new Server().url("http://localhost:8080").description("Local"),
+                        new Server().url("http://localhost:8080").description("Local"),
                         new Server().url("https://getjob.world").description("Production")
                 ))
                 .components(new Components()

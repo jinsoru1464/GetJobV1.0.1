@@ -59,8 +59,21 @@ public class UserService {
     }
 
     public String generateTemporaryToken() {
-        return jwtTokenProvider.generateTemporaryToken(); // 임시 토큰 생성
+        User user = userRepository.findByLoginId("temporary")
+                .orElseGet(() -> {
+                    User newUser = User.builder()
+                            .loginId("temporary")
+                            .username("임시 유저")
+                            .password(passwordEncoder.encode("temp1234"))
+                            .role("ROLE_USER")
+                            .build();
+
+                    return userRepository.save(newUser);
+                });
+
+        return jwtTokenProvider.generateToken(user.getLoginId(), user.getRole());
     }
+
 
 
     public User findByLoginId(String loginId) {

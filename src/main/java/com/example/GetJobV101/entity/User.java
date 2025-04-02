@@ -29,4 +29,8 @@ public class User {
 
     @Schema(description = "사용자의 비밀번호")
     private String password;
+
+    @Schema(description = "사용자의 역할", example = "ROLE_USER")
+    private String role;
+
 }
