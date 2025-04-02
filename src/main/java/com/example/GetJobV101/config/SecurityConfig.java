@@ -27,7 +27,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .cors()
+                .cors()  // 🔥 CORS 설정 활성화
                 .and()
                 .csrf().disable()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
@@ -48,7 +48,7 @@ public class SecurityConfig {
                 // ✅ CORS preflight 허용
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                // ✅ 정적 페이지 허용
+                // ✅ 정적 페이지 허용 (프론트 HTML 파일들)
                 .requestMatchers(
                         "/mainpage2.html",
                         "/inputpage.html",
@@ -72,14 +72,15 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // 🔥 Swagger 테스트 위해 일단 전체 허용
-        config.setAllowedOriginPatterns(List.of(
-                "http://localhost:8080",
+        // 🔥 Swagger 포함한 프론트 Origin 허용
+        config.setAllowedOrigins(List.of(
                 "http://localhost:3000",
+                "http://localhost:8080",
                 "https://getjob.world"
         ));
-        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(Arrays.asList(
+
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of(
                 "Authorization",
                 "Content-Type",
                 "Accept",
@@ -87,8 +88,11 @@ public class SecurityConfig {
                 "X-Requested-With"
         ));
 
-        config.setAllowCredentials(true); // "*" 와 함께 쓸 땐 false
-        config.setMaxAge(3600L); // preflight 캐시 시간
+        // ✅ 클라이언트에서 Authorization 헤더 읽을 수 있도록
+        config.setExposedHeaders(List.of("Authorization"));
+
+        config.setAllowCredentials(true);
+        config.setMaxAge(3600L); // 캐시 시간
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
