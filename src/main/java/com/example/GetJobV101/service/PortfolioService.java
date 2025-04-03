@@ -186,10 +186,13 @@ public class PortfolioService {
 
             // 이미지 경로 업데이트
             List<String> imagePaths = dto.getImagePaths();
-            if (imagePaths == null || imagePaths.isEmpty()) {
-                imagePaths = new ArrayList<>(List.of("https://get-job-bucket.s3.ap-northeast-2.amazonaws.com/defaults/default.png")) ;
+            if (imagePaths != null && !imagePaths.isEmpty()) {
+                existingPortfolio.setImagePaths(imagePaths);
             }
-            existingPortfolio.setImagePaths(imagePaths);
+// null이거나 빈 배열이면 기존 이미지 유지
+
+// else일 경우 -> 기존 이미지 유지
+
 
             if (dto.getUser() != null) {
                 existingPortfolio.setUser(dto.getUser());
