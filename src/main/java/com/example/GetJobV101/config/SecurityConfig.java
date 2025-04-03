@@ -80,10 +80,11 @@ public class SecurityConfig {
 
 
         // 🔥 Swagger 포함한 프론트 Origin 허용
-        config.setAllowedOriginPatterns(List.of(
+        config.setAllowedOrigins(List.of(
+                "https://getjob.world",
                 "http://localhost:3000",
-                //"http://localhost:8080",
-                "https://getjob.world"
+                "http://localhost:8080"
+
 
         ));
 
