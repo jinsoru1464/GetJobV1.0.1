@@ -25,6 +25,7 @@
         import org.springframework.web.multipart.MultipartFile;
 
         import java.io.IOException;
+        import java.time.LocalDate;
         import java.util.*;
         import java.util.stream.Collectors;
 
@@ -54,13 +55,8 @@
             private String region;
 
 
-            private String extractLoginId(HttpServletRequest request) {
-                String header = request.getHeader("Authorization");
-                if (header != null && header.startsWith("Bearer ")) {
-                    return jwtUtil.getLoginIdFromToken(header.substring(7));
-                }
-                return null;
-            }
+
+
 
             @Operation(
                     summary = "포트폴리오 생성",
@@ -72,7 +68,6 @@
             )
             @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
             public ResponseEntity<?> createPortfolio(
-                    HttpServletRequest request,
 
                     @Parameter(
                             description = "포트폴리오 JSON 본문",
@@ -95,7 +90,7 @@
 
              {
                 try {
-                    String loginId = extractLoginId(request);
+                    String loginId = userDetails.getUsername();
                     User user = userService.findByLoginId(loginId);
 
                     List<String> imageUrls = new ArrayList<>();
@@ -157,8 +152,8 @@
                     }
             )
             @GetMapping
-            public ResponseEntity<List<PortfolioFullResponseDto>> getMyPortfolios(HttpServletRequest request) {
-                String loginId = extractLoginId(request);
+            public ResponseEntity<List<PortfolioFullResponseDto>> getMyPortfolios( @AuthenticationPrincipal UserDetails userDetails) {
+                String loginId = userDetails.getUsername();
                 User user = userService.findByLoginId(loginId);
                 List<Portfolio> portfolios = portfolioService.getPortfoliosByUser(user);
 
@@ -219,10 +214,10 @@
             @DeleteMapping("/{id}")
             public ResponseEntity<String> deletePortfolio(
                     @Parameter(description = "포트폴리오 ID") @PathVariable Long id,
-                    HttpServletRequest request) {
+                    @AuthenticationPrincipal UserDetails userDetails) {
 
                 try {
-                    String loginId = extractLoginId(request);
+                    String loginId = userDetails.getUsername();
                     User user = userService.findByLoginId(loginId);
 
                     Optional<Portfolio> portfolioOpt = portfolioService.getPortfolioById(id);
@@ -258,7 +253,7 @@
             @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
             public ResponseEntity<?> updatePortfolio(
                     @Parameter(description = "포트폴리오 ID") @PathVariable Long id,
-                    HttpServletRequest request,
+                    @AuthenticationPrincipal UserDetails userDetails,
 
                     @Parameter(
                             description = "수정할 포트폴리오 정보 (JSON)",
@@ -279,7 +274,7 @@
                 // 기존 로직 유지
 
                 try {
-                    String loginId = extractLoginId(request);
+                    String loginId = userDetails.getUsername();
                     User user = userService.findByLoginId(loginId);
 
                     Optional<Portfolio> existingPortfolioOpt = portfolioService.getPortfolioById(id);
@@ -321,8 +316,40 @@
                         dto.setImagePaths(existingPortfolio.getImagePaths()); // 이미지 유지
                     }
 
-                    dto.setUser(user);
-                    Portfolio updatedPortfolio = portfolioService.updatePortfolio(id, dto);
+                    // 기존 포트폴리오에 dto 필드들을 조건적으로 덮어쓰기
+                    if (dto.getTitle() != null && !dto.getTitle().isBlank()) {
+                        existingPortfolio.setTitle(dto.getTitle());
+                    }
+                    if (dto.getSubject() != null && !dto.getSubject().isBlank()) {
+                        existingPortfolio.setSubject(dto.getSubject());
+                    }
+                    if (dto.getStartDate() != null && !dto.getStartDate().isBlank()) {
+                        existingPortfolio.setStartDate(LocalDate.parse(dto.getStartDate()));
+                    }
+                    if (dto.getEndDate() != null && !dto.getEndDate().isBlank()) {
+                        existingPortfolio.setEndDate(LocalDate.parse(dto.getEndDate()));
+                    }
+                    if (dto.getTeamSize() != null) {
+                        existingPortfolio.setTeamSize(dto.getTeamSize());
+                    }
+                    if (dto.getSkills() != null && !dto.getSkills().isBlank()) {
+                        existingPortfolio.setSkills(dto.getSkills());
+                    }
+                    if (dto.getRole() != null && !dto.getRole().isBlank()) {
+                        existingPortfolio.setRole(dto.getRole());
+                    }
+                    if (dto.getDescriptions() != null &&
+                            dto.getDescriptions().stream().anyMatch(s -> s != null && !s.isBlank())) {
+                        existingPortfolio.setDescriptions(dto.getDescriptions());
+                    }
+
+                    if (dto.getImagePaths() != null) {
+                        existingPortfolio.setImagePaths(dto.getImagePaths());
+                    }
+
+// 저장
+                    Portfolio updatedPortfolio = portfolioService.updatePortfolio(existingPortfolio);
+
 
                     PortfolioResponseDto portfolioDto = convertToDtoForCreateOrUpdate(updatedPortfolio);
                     UserSimpleDto userDto = new UserSimpleDto(user.getId(), user.getUsername());

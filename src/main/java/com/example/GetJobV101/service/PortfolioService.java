@@ -163,47 +163,11 @@ public class PortfolioService {
         }
     }
     // ✅ 포트폴리오 수정 메소드
-    public Portfolio updatePortfolio(Long id, PortfolioDto dto) {
-        // 기존 포트폴리오를 조회하여 존재 여부 확인
-        Optional<Portfolio> existingPortfolioOpt = portfolioRepository.findById(id);
-        if (existingPortfolioOpt.isPresent()) {
-            Portfolio existingPortfolio = existingPortfolioOpt.get();
-
-            // 제목, 날짜, 인원, 스킬, 역할 등 업데이트
-            existingPortfolio.setTitle(dto.getTitle());
-            existingPortfolio.setSubject(dto.getSubject());
-
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-            existingPortfolio.setStartDate(LocalDate.parse(dto.getStartDate(), formatter));
-            existingPortfolio.setEndDate(LocalDate.parse(dto.getEndDate(), formatter));
-
-            existingPortfolio.setTeamSize(dto.getTeamSize());
-            existingPortfolio.setSkills(dto.getSkills());
-            existingPortfolio.setRole(dto.getRole());
-
-            // 설명 업데이트
-            existingPortfolio.setDescriptions(dto.getDescriptions());
-
-            // 이미지 경로 업데이트
-            List<String> imagePaths = dto.getImagePaths();
-            if (imagePaths != null && !imagePaths.isEmpty()) {
-                existingPortfolio.setImagePaths(imagePaths);
-            }
-// null이거나 빈 배열이면 기존 이미지 유지
-
-// else일 경우 -> 기존 이미지 유지
-
-
-            if (dto.getUser() != null) {
-                existingPortfolio.setUser(dto.getUser());
-            }
-
-            // 수정된 포트폴리오 저장
-            return portfolioRepository.save(existingPortfolio);
-        } else {
-            throw new RuntimeException("수정하려는 포트폴리오가 존재하지 않습니다.");
-        }
+    public Portfolio updatePortfolio(Portfolio portfolio) {
+        return portfolioRepository.save(portfolio);
     }
+
+
 
 
 }
