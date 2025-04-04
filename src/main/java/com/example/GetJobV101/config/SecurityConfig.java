@@ -58,6 +58,7 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of(
                 "http://localhost:3000",
+                "https://test-psi-two-95.vercel.app",
                 "http://localhost:8080",
                 "https://getjob.world"
         ));
