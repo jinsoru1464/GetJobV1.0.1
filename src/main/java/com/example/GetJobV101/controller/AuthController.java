@@ -1,6 +1,9 @@
+
+
 package com.example.GetJobV101.controller;
 
 import com.example.GetJobV101.dto.JoinRequest;
+import com.example.GetJobV101.dto.ErrorResponse;
 import com.example.GetJobV101.dto.JwtResponse;
 import com.example.GetJobV101.dto.LoginRequest;
 import com.example.GetJobV101.dto.LoginResponse;
@@ -13,7 +16,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -52,6 +58,7 @@ public class AuthController {
         }
     }
 
+
     @Operation(
             summary = "로그인",
             description = "사용자의 로그인 정보를 기반으로 JWT 토큰을 발급합니다.",
@@ -62,13 +69,19 @@ public class AuthController {
     )
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-        LoginResponse response = userService.login(request);
-        if (response == null) {
-            return ResponseEntity.badRequest().body("🚫 이메일 또는 비밀번호가 올바르지 않습니다.");
-        } else {
+        try {
+            LoginResponse response = userService.login(request);
             return ResponseEntity.ok(response);
+        } catch (UsernameNotFoundException | BadCredentialsException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ErrorResponse(401, "이메일 또는 비밀번호가 올바르지 않습니다."));
         }
     }
+
+
+
+
+
 
 
     @Operation(

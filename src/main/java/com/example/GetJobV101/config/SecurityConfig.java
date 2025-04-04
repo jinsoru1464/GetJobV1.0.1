@@ -34,25 +34,24 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
-                                "/api-docs/**"
-                        ).permitAll()
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers(
+                                "/api-docs/**",
+                                "/api/auth/**",
+                                "/h2-console/**",
                                 "/mainpage2.html",
                                 "/inputpage.html",
                                 "/portfoliodetail.html",
-                                "/portfoliopage.html",
-                                "/h2-console/**" // ✅ H2 콘솔 허용
+                                "/portfoliopage.html"
                         ).permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/portfolios/**", "/api/ai/**").authenticated()
                         .anyRequest().denyAll()
                 )
+                .formLogin(AbstractHttpConfigurer::disable)  // 🔥 추가
+                .httpBasic(AbstractHttpConfigurer::disable)  // 🔥 추가
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
-
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {

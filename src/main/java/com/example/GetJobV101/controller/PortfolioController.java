@@ -70,19 +70,21 @@
             public ResponseEntity<?> createPortfolio(
 
                     @Parameter(
-                            description = "포트폴리오 JSON 본문",
+                            description = "포트폴리오 JSON 데이터. 이미지 제외 나머지 정보는 필수입니다.",
                             required = true,
                             content = @Content(
                                     mediaType = MediaType.APPLICATION_JSON_VALUE,
                                     schema = @Schema(implementation = PortfolioDto.class)
                             )
                     )
+
                     @RequestPart("portfolio") PortfolioDto dto,
 
                     @Parameter(
-                            description = "이미지 파일들 (선택)",
+                            description = "업로드할 이미지 파일 (선택). 제출하지 않으면 기본 이미지가 사용됩니다.",
                             content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM_VALUE)
                     )
+
                     @RequestPart(value = "images", required = false) MultipartFile[] images,
 
                     @AuthenticationPrincipal UserDetails userDetails
@@ -127,6 +129,12 @@
 
                     dto.setImagePaths(imageUrls);
                     dto.setUser(user);
+
+                    // imagePaths가 null이거나 빈 배열이면 기본 이미지 경로로 세팅
+                    if (dto.getImagePaths() == null || dto.getImagePaths().isEmpty()) {
+                        dto.setImagePaths(List.of("https://" + bucket + ".s3." + region + ".amazonaws.com/defaults/default.png"));
+                    }
+
 
                     Portfolio savedPortfolio = portfolioService.savePortfolio(dto);
                     PortfolioResponseDto portfolioDto = convertToDtoForCreateOrUpdate(savedPortfolio);
@@ -178,27 +186,50 @@
                     description = "포트폴리오 ID를 기반으로 상세 정보를 조회합니다.",
                     responses = {
                             @ApiResponse(responseCode = "200", description = "포트폴리오 조회 성공", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Portfolio.class))),
-                            @ApiResponse(responseCode = "404", description = "해당 포트폴리오를 찾을 수 없음")
+                            @ApiResponse(responseCode = "404", description = "해당 포트폴리오를 찾을 수 없음"),
+                            @ApiResponse(responseCode = "403", description = "해당 포트폴리오는 다른 사용자에 의해 작성되었습니다.")
                     }
             )
             @GetMapping("/{id}")
-            public ResponseEntity<PortfolioFullResponseDto> getPortfolioById(@PathVariable Long id, HttpServletRequest request) {
-                Optional<Portfolio> portfolioOpt = portfolioService.getPortfolioById(id);
-                if (portfolioOpt.isEmpty()) {
-                    return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            public ResponseEntity<PortfolioFullResponseDto> getPortfolioById(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
+                try {
+                    // 로그인한 사용자 정보 가져오기
+                    String loginId = userDetails.getUsername();  // 로그인한 사용자의 아이디를 가져옴
+                    User loggedInUser = userService.findByLoginId(loginId);  // 로그인한 사용자의 User 객체 가져옴
+
+                    Optional<Portfolio> portfolioOpt = portfolioService.getPortfolioById(id);  // 포트폴리오 조회
+                    if (portfolioOpt.isEmpty()) {
+                        // 포트폴리오가 없으면 404
+                        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                                .body(null);  // 포트폴리오 없음
+                    }
+
+                    Portfolio p = portfolioOpt.get();
+
+                    // 작성자가 아니라면 403
+                    if (!p.getUser().getId().equals(loggedInUser.getId())) {
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                                .body(null);  // 권한 없음
+                    }
+
+                    // 포트폴리오 작성자가 맞다면 정상적으로 응답
+                    return ResponseEntity.ok(new PortfolioFullResponseDto(
+                            new UserResponseDto(
+                                    p.getUser().getId(),
+                                    p.getUser().getLoginId(),
+                                    p.getUser().getUsername()
+                            ),
+                            convertToDtoWithoutUser(p)
+                    ));
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    // 서버 오류 발생 시 일관된 메시지와 함께 500 반환
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .body(null);  // 서버 오류 시 null 반환 (또는 에러 메시지 포함 가능)
                 }
-
-                Portfolio p = portfolioOpt.get();
-                return ResponseEntity.ok(new PortfolioFullResponseDto(
-                        new UserResponseDto(
-                                p.getUser().getId(),
-                                p.getUser().getLoginId(),
-                                p.getUser().getUsername()
-                        ),
-                        convertToDtoWithoutUser(p)
-                ));
-
             }
+
 
 
 
@@ -243,7 +274,12 @@
 
             @Operation(
                     summary = "포트폴리오 수정",
-                    description = "기존 포트폴리오 정보를 수정합니다. 이미지가 포함되지 않으면 기존 이미지 유지됩니다.",
+                    description = """
+                        기존 포트폴리오 정보를 수정합니다. 
+                        JSON 본문에는 수정하고자 하는 항목만 포함할 수 있습니다. 
+                        이미지 파일(images)은 선택 항목이며, 업로드하지 않으면 기존 이미지가 유지됩니다. 
+                        만약 기존 이미지가 없고 새 이미지도 없을 경우, 기본 이미지가 적용됩니다.
+                        """,
                     responses = {
                             @ApiResponse(responseCode = "200", description = "수정 성공", content = @Content(schema = @Schema(implementation = PortfolioFullResponseDto.class))),
                             @ApiResponse(responseCode = "404", description = "포트폴리오 없음"),
@@ -253,10 +289,11 @@
             @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
             public ResponseEntity<?> updatePortfolio(
                     @Parameter(description = "포트폴리오 ID") @PathVariable Long id,
+
                     @AuthenticationPrincipal UserDetails userDetails,
 
                     @Parameter(
-                            description = "수정할 포트폴리오 정보 (JSON)",
+                            description = "수정할 포트폴리오 JSON 데이터. 수정할 필드만 포함할 수 있습니다.",
                             required = true,
                             content = @Content(
                                     mediaType = MediaType.APPLICATION_JSON_VALUE,
@@ -266,11 +303,12 @@
                     @RequestPart("portfolio") PortfolioDto dto,
 
                     @Parameter(
-                            description = "이미지 파일 (선택)",
+                            description = "업로드할 이미지 파일 (선택). 업로드하지 않으면 기존 이미지가 유지됩니다.",
                             content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM_VALUE)
                     )
                     @RequestPart(value = "images", required = false) MultipartFile[] images
-            ) {
+            )
+            {
                 // 기존 로직 유지
 
                 try {
@@ -311,6 +349,9 @@
                             String url = "https://" + bucket + ".s3." + region + ".amazonaws.com/" + key;
                             imageUrls.add(url);
                         }
+                        if (imageUrls.isEmpty()) {
+                            imageUrls.add("https://get-job-bucket.s3.ap-northeast-2.amazonaws.com/defaults/default.png"); // 실제 default 이미지 경로
+                        }
                         dto.setImagePaths(imageUrls); // 새 이미지로 교체
                     } else {
                         dto.setImagePaths(existingPortfolio.getImagePaths()); // 이미지 유지
@@ -346,6 +387,12 @@
                     if (dto.getImagePaths() != null) {
                         existingPortfolio.setImagePaths(dto.getImagePaths());
                     }
+
+                    // 그리고 최종적으로 imagePaths가 null이거나 비어 있다면 기본 이미지 세팅
+                    if (existingPortfolio.getImagePaths() == null || existingPortfolio.getImagePaths().isEmpty()) {
+                        existingPortfolio.setImagePaths(List.of("https://" + bucket + ".s3." + region + ".amazonaws.com/defaults/default.png"));
+                    }
+
 
 // 저장
                     Portfolio updatedPortfolio = portfolioService.updatePortfolio(existingPortfolio);

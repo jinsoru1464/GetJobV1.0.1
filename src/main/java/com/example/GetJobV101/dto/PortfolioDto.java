@@ -41,8 +41,9 @@ public class PortfolioDto {
     @Schema(description = "프로젝트에서 수행한 작업 또는 기능 상세 설명 리스트", example = "[\"ERD 설계 및 구축\", \"JWT 인증 기반 로그인 구현\"]")
     private List<String> descriptions;
 
-    @Schema(description = "이미지 파일 경로 리스트. S3에 저장된 이미지 URL 또는 경로 문자열")
+    @Schema(description = "이미지 파일 경로 리스트. 선택 항목이며, 미입력 시 기본 이미지가 자동 등록됩니다.", required = false)
     private List<String> imagePaths;
+
 
     @Schema(hidden = true)
     private User user; // ✅ 유저 정보 저장용 필드 추가

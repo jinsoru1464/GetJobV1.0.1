@@ -70,6 +70,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 if (userDetails == null) {
                     System.out.println("🚫 유저 정보를 찾을 수 없음 (UserDetails null)");
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setContentType("application/json;charset=UTF-8");
+                    response.getWriter().write("{\"message\": \"🚫 유저 정보를 찾을 수 없습니다.\"}");
+                    return;
                 } else if (jwtUtil.validateToken(token, userDetails)) {
                     UsernamePasswordAuthenticationToken authToken =
                             new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
@@ -79,6 +83,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     System.out.println("🔒 SecurityContext 인증 설정 완료: " + userDetails.getUsername());
                 } else {
                     System.out.println("🚫 토큰 유효성 검사 실패");
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setContentType("application/json;charset=UTF-8");
+                    response.getWriter().write("{\"message\": \"🚫 유효하지 않은 토큰입니다.\"}");
+                    return;
                 }
             }
 
@@ -104,7 +112,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-
         filterChain.doFilter(request, response);
     }
+
 }
