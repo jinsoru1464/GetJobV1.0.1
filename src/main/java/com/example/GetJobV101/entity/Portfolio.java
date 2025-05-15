@@ -40,6 +40,7 @@ public class Portfolio {
 
     @ElementCollection
     @CollectionTable(name = "portfolio_descriptions", joinColumns = @JoinColumn(name = "portfolio_id"))
+    @Lob
     private List<String> descriptions = new ArrayList<>();  // ✅ 초기화 필수
 
     @ElementCollection

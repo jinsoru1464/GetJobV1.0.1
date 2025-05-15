@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>포트폴리오 PDF</title>
+    <style>
+        body {
+            font-family: 'NanumGothic', sans-serif;
+        }
+        .title {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .section {
+            margin-top: 20px;
+        }
+        img {
+            max-width: 300px;
+            margin-bottom: 10px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+<div class="title" th:text="${portfolio.title}">[제목]</div>
+
+<div class="section">
+    <strong>주제:</strong> <span th:text="${portfolio.subject}">[주제]</span><br />
+    <strong>기간:</strong> <span th:text="${portfolio.startDate}">[시작]</span> ~ <span th:text="${portfolio.endDate}">[종료]</span><br />
+    <strong>팀원 수:</strong> <span th:text="${portfolio.teamSize}">[팀]</span><br />
+    <strong>기술 스택:</strong> <span th:text="${portfolio.skills}">[기술]</span><br />
+    <strong>역할:</strong> <span th:text="${portfolio.role}">[역할]</span>
+</div>
+
+<div class="section">
+    <strong>상세 설명:</strong>
+    <ul>
+        <li th:each="desc : ${portfolio.descriptions}" th:text="${desc}">[설명]</li>
+    </ul>
+</div>
+
+<div class="section">
+    <strong>이미지:</strong><br/>
+    <div th:each="imgUrl : ${portfolio.imagePaths}">
+        <img th:src="${imgUrl}" alt="포트폴리오 이미지"/>
+    </div>
+</div>
+</body>
+</html>
