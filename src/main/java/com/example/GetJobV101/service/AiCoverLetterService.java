@@ -7,6 +7,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -70,10 +71,16 @@ public class AiCoverLetterService {
         Map<String, Object> message = (Map<String, Object>) ((Map<String, Object>) ((List<?>) response.getBody().get("choices")).get(0)).get("message");
         String rawText = (String) message.get("content");
 
-        return List.of(rawText.split("\n")).stream()
-                .map(line -> line.replaceAll("^Q?\\d*\\.?\\s*", "").trim()) // "Q1.", "1." 등 제거
+        List<String> lines = List.of(rawText.split("\n")).stream()
+                .map(line -> line.replaceAll("^Q?\\d*\\.?\\s*", "").trim())
                 .filter(line -> !line.isBlank())
                 .toList();
+
+        List<String> numbered = new ArrayList<>();
+        for (int i = 0; i < lines.size(); i++) {
+            numbered.add((i + 1) + ". " + lines.get(i));
+        }
+        return numbered;
     }
 
     public Map<String, Object> analyzeCoverLetter(String content) {
